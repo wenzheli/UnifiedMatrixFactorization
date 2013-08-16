@@ -9,7 +9,7 @@ import com.ml.umf.exception.FeatureException;
  * @author wenzhe
  *
  */
-public class FeatureVectorUtils {
+public class VectorUtils {
     
     /**
      * Inner product of two vectors with the same size. 

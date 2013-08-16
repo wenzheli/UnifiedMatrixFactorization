@@ -10,7 +10,7 @@ import com.ml.umf.data.Instance;
 import com.ml.umf.data.Item;
 import com.ml.umf.data.User;
 import com.ml.umf.data.UserItem;
-import com.ml.umf.utils.FeatureVectorUtils;
+import com.ml.umf.utils.VectorUtils;
 
 /**
  * Unified matrix factorization. We both use latent features and side side information(
@@ -32,9 +32,9 @@ public class UnifiedMatrixFactorization implements SGDLearner, Classifier{
     
     public double squareLoss = 0;
     
-    /** ItemMF id (index) to ItemMF object map */
+    /** Item id (index) to Item object map */
     Map<Integer, Item> items = new HashMap<Integer, Item>();
-    /** UserMF id (index) to UserMF object map */
+    /** User id (index) to User object map */
     Map<Integer, User> users = new HashMap<Integer, User>();
     
     public UnifiedMatrixFactorization(){
@@ -54,12 +54,12 @@ public class UnifiedMatrixFactorization implements SGDLearner, Classifier{
         Item item = items.get(itemIndex);
         double predictedValue = 0;
         try {
-            double latentProduct = FeatureVectorUtils.calInnerProduct(user.getLatentFeatures(), 
+            double latentProduct = VectorUtils.calInnerProduct(user.getLatentFeatures(), 
                     item.getLatentFeatures());
-            double[] weights = FeatureVectorUtils.calAddition(globalWeights, user.getUserWeights());
-            double[] userItemFeature = FeatureVectorUtils.appendFeatureVector(user.getUserFeatures(),
+            double[] weights = VectorUtils.calAddition(globalWeights, user.getUserWeights());
+            double[] userItemFeature = VectorUtils.appendFeatureVector(user.getUserFeatures(),
                     item.getItemFeatures());
-            predictedValue = latentProduct + FeatureVectorUtils.calInnerProduct(weights, userItemFeature);
+            predictedValue = latentProduct + VectorUtils.calInnerProduct(weights, userItemFeature);
         } catch(Exception e){
             // TODO
         }
@@ -77,36 +77,36 @@ public class UnifiedMatrixFactorization implements SGDLearner, Classifier{
         Item item = items.get(itemIndex);
         
         // update the weights. 
-        double latentProduct = FeatureVectorUtils.calInnerProduct(user.getLatentFeatures(), 
+        double latentProduct = VectorUtils.calInnerProduct(user.getLatentFeatures(), 
                 item.getLatentFeatures());
-        double[] weights = FeatureVectorUtils.calAddition(globalWeights, user.getUserWeights());
-        double[] userItemFeature = FeatureVectorUtils.appendFeatureVector(user.getUserFeatures(),
+        double[] weights = VectorUtils.calAddition(globalWeights, user.getUserWeights());
+        double[] userItemFeature = VectorUtils.appendFeatureVector(user.getUserFeatures(),
                 item.getItemFeatures());
-        double epsilon = latentProduct + FeatureVectorUtils.calInnerProduct(weights, userItemFeature) - rating;
+        double epsilon = latentProduct + VectorUtils.calInnerProduct(weights, userItemFeature) - rating;
         squareLoss += epsilon * epsilon;
         
         // update UserUMF latent feature vector. 
         // u(t) = (1-\eta * lamda)u(t-1)-\eta * epsilon * v(t-1). 
         // u(t) is the UserMF for time t,  and v(t) is ItemMF for time t. 
-        double[] firstTerm = FeatureVectorUtils.calMultiply(1-stepSize*regularizationRate, user.getLatentFeatures()); 
-        double[] secondTerm = FeatureVectorUtils.calMultiply(stepSize * epsilon, item.getLatentFeatures()) ;
-        double[] updatedUserFeatures = FeatureVectorUtils.calMinus(firstTerm, secondTerm);
+        double[] firstTerm = VectorUtils.calMultiply(1-stepSize*regularizationRate, user.getLatentFeatures()); 
+        double[] secondTerm = VectorUtils.calMultiply(stepSize * epsilon, item.getLatentFeatures()) ;
+        double[] updatedUserFeatures = VectorUtils.calMinus(firstTerm, secondTerm);
         
         // update ItemMF latent feature vector
         // v(t) = (1-\eta * lamda)v(t-1) - \eta * epsilon * u(t-1)
-        firstTerm = FeatureVectorUtils.calMultiply(1-stepSize*regularizationRate, item.getLatentFeatures());
-        secondTerm = FeatureVectorUtils.calMultiply(stepSize * epsilon, user.getLatentFeatures());
-        double[] updatedItemMFFeatures = FeatureVectorUtils.calMinus(firstTerm, secondTerm);
+        firstTerm = VectorUtils.calMultiply(1-stepSize*regularizationRate, item.getLatentFeatures());
+        secondTerm = VectorUtils.calMultiply(stepSize * epsilon, user.getLatentFeatures());
+        double[] updatedItemMFFeatures = VectorUtils.calMinus(firstTerm, secondTerm);
         
         // update global weights
-        firstTerm = FeatureVectorUtils.calMultiply(1-stepSize*regularizationRate, globalWeights);
-        secondTerm = FeatureVectorUtils.calMultiply(stepSize * epsilon, userItemFeature);
-        double[] updatedGlobalWeights = FeatureVectorUtils.calMinus(firstTerm, secondTerm);
+        firstTerm = VectorUtils.calMultiply(1-stepSize*regularizationRate, globalWeights);
+        secondTerm = VectorUtils.calMultiply(stepSize * epsilon, userItemFeature);
+        double[] updatedGlobalWeights = VectorUtils.calMinus(firstTerm, secondTerm);
         
         // update user weights
-        firstTerm = FeatureVectorUtils.calMultiply(1-stepSize*regularizationRate, user.getUserWeights());
-        secondTerm = FeatureVectorUtils.calMultiply(stepSize * epsilon, userItemFeature);
-        double[] updatedUserWeights = FeatureVectorUtils.calMinus(firstTerm, secondTerm);
+        firstTerm = VectorUtils.calMultiply(1-stepSize*regularizationRate, user.getUserWeights());
+        secondTerm = VectorUtils.calMultiply(stepSize * epsilon, userItemFeature);
+        double[] updatedUserWeights = VectorUtils.calMinus(firstTerm, secondTerm);
         
        
         // update each one. 
